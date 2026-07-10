@@ -1,0 +1,70 @@
+services:
+  
+  redis:
+    image: redis:alpine
+    container_name: doctorredis
+    ports:
+      - "6379:6379"
+      
+    networks:
+      - app-network
+    restart: unless-stopped
+
+  
+  backend:
+    build:
+      context: ./backend
+      dockerfile: DockerFile
+    container_name: doctorbackend
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./backend:/app
+      - /app/node_modules 
+    dns: 
+      - 8.8.8.8
+      - 1.1.1.1
+    environment:
+      - NODE_ENV=development
+      
+      
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      
+      
+      - DB_HOST=aws-1-ap-northeast-2.pooler.supabase.com
+      - DB_PORT=5432
+      - DB_USERNAME=postgres.lkbvovjxzmjpzzojhnnc
+      - DB_PASSWORD=Nup-23-51177-1
+      - DB_NAME=postgres
+      
+
+      - Groq_API_KEY=
+    depends_on:
+      - redis
+    networks:
+      - app-network
+    restart: unless-stopped
+
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: doctorfrontend
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    environment:
+      - NEXT_PUBLIC_API_URL=http://localhost:8000
+    depends_on:
+      - backend
+    networks:
+      - app-network
+    restart: unless-stopped
+
+networks:
+  app-network:
+    driver: bridge
