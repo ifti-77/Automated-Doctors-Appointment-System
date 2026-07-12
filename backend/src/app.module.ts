@@ -1,21 +1,38 @@
 import { Module } from '@nestjs/common';
 import { AgentModule } from './agent/agent.module';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { ConfigModule, ConfigService } from '@nestjs/config';
+import { RedisModule } from '@nestjs-modules/ioredis';
 
 @Module({
-  imports: [AgentModule, TypeOrmModule.forRoot({
-    type: "postgres",
-    host: "aws-1-ap-northeast-2.pooler.supabase.com",
-    port: 5432,
-    username: "postgres.lkbvovjxzmjpzzojhnnc",
-    password: "Nup-23-51177-1",
-    database: "postgres",
-    synchronize: true,
-    autoLoadEntities: true,
-    ssl:{
-      rejectUnauthorized: false
-    }
-  })],
+  imports: [
+    AgentModule,
+    ConfigModule.forRoot({
+      isGlobal: true,
+      envFilePath: '.env',
+    }),
+    TypeOrmModule.forRootAsync({
+      imports: [ConfigModule],
+      inject: [ConfigService],
+      useFactory: (configService: ConfigService) => ({
+        type: 'postgres',
+        host: configService.get('DB_host'),
+        port: configService.get('DB_port'),
+        username: configService.get('DB_username'),
+        password: configService.get('DB_password'),
+        database: configService.get('DB_database'),
+        synchronize: true,
+        autoLoadEntities: true,
+        ssl: {
+          rejectUnauthorized: false,
+        },
+      }),
+    }),
+    RedisModule.forRoot({
+      type: 'single',
+      url: 'redis://localhost:6379',
+    }),
+  ],
   controllers: [],
   providers: [],
 })

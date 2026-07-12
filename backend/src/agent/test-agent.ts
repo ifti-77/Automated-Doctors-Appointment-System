@@ -3,13 +3,13 @@
 
 // async function runTest() {
 //   console.log("🚀 Initializing Agent Test...");
-  
+
 //   try {
 //     const result = await receptionistAgent.invoke({
 //       messages: [
-//         { 
-//           role: "user", 
-//           content: "Hi, I'm John Doe. Can I see Dr. Smith this coming Saturday at 11:00 AM? If it's free, book it." 
+//         {
+//           role: "user",
+//           content: "Hi, I'm John Doe. Can I see Dr. Smith this coming Saturday at 11:00 AM? If it's free, book it."
 //         }
 //       ],
 //     });

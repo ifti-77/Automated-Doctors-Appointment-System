@@ -1,87 +1,36 @@
-import { Injectable } from "@nestjs/common";
-import { receptionistAgent } from "../AGENTS/reciptionist.agent";
-
-export interface CleanAgentResponse {
-    success: boolean;
-    userMessage: string;
-    stepsTaken: {
-        tool: string;
-        arguments: Record<string, any>;
-        result: string;
-    }[];
-    finalReply: string;
-}
+import { Injectable } from '@nestjs/common';
+import { ReceptionistAgent } from '../AGENTS/reciptionist.agent';
+import { InjectRedis } from '@nestjs-modules/ioredis';
+import { Redis } from 'ioredis';
+import { RedisClient } from 'src/shared/RedisClient';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Doctor } from 'src/entities/doctor.entity';
+import { DoctorService } from 'src/doctor/doctor.service';
+import { DoctorDetailsForAgent } from 'src/shared/customeTypes';
 
 @Injectable()
 export class AgentService {
-    constructor() { }
+  constructor(
+    private receptionistAgent: ReceptionistAgent,
+    private readonly redis: RedisClient,
+    private readonly doctorService: DoctorService,
+  ) {}
 
-    GetAgent(): string {
+  GetAgent(): string {
+    return 'the agents are working';
+  }
 
-        return "the agents are working"
+  async useAgent(content: string, doctorId: string): Promise<object> {
+    if (!(await this.redis.checkRedisForKey(`doctor:${doctorId}`))) {
+      const doctor = (await this.doctorService.GetDoctorById(
+        doctorId,
+      )) as DoctorDetailsForAgent;
+      await this.redis.setValueInRedis(
+        `doctor:${doctorId}`,
+        JSON.stringify(doctor),
+      )
     }
 
-    async testAgent(): Promise<object> {
-
-        try {
-            const doctorid = 1
-            const result = await receptionistAgent.invoke({
-                messages: [
-                    {
-                        role: "user",
-                        content: `Hi, I'm John Doe. is the doctor available on monday at 11:00 AM? doctorID: ${doctorid}`
-                    }
-                ],
-            });
-            const messages = result.messages;
-            // 1. Extract the initial prompt sent by the user
-            const humanMsg = messages.find((m: any) => (m._getType ? m._getType() : m.type) === 'human');
-            const userMessage = humanMsg ? humanMsg.content : '';
-
-            // 2. Extract and pair the tool executions sequentially
-            const stepsTaken: any[] = [];
-
-            messages.forEach((msg: any, index: number) => {
-                const type = msg._getType ? msg._getType() : msg.type;
-
-                // If the AI decided to call a tool
-                if (type === 'ai' && msg.tool_calls && msg.tool_calls.length > 0) {
-                    msg.tool_calls.forEach((toolCall: any) => {
-                        // Find the corresponding tool response message following this call
-                        const toolReply = messages.find(
-                            (m: any) =>
-                                (m._getType ? m._getType() : m.type) === 'tool' &&
-                                m.tool_call_id === toolCall.id
-                        );
-
-                        stepsTaken.push({
-                            tool: toolCall.name,
-                            arguments: toolCall.args,
-                            result: toolReply ? toolReply.content : 'No output returned'
-                        });
-                    });
-                }
-            });
-
-            // 3. Extract the final answer returned by the agent
-            const aiMessages = messages.filter((m: any) => (m._getType ? m._getType() : m.type) === 'ai');
-            const lastAiMsg = aiMessages[aiMessages.length - 1];
-            const finalReply = lastAiMsg ? lastAiMsg.content : '';
-
-            // 4. Return the consolidated clean object format
-            return {
-                success: true,
-                userMessage,
-                stepsTaken,
-                finalReply
-            };
-
-
-        } catch (error) {
-            console.error("❌ Agent execution crashed:", error);
-            throw error;
-        }
-    }
-
-
+    return await this.receptionistAgent.RunAgent('user', content, doctorId);
+  }
 }
