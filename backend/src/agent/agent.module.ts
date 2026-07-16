@@ -8,9 +8,12 @@ import { RedisClient } from 'src/shared/RedisClient';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { Doctor } from 'src/entities/doctor.entity';
 import { DoctorService } from 'src/doctor/doctor.service';
+import { Schedule } from 'src/entities/schedule.entity';
+import { Chamber } from 'src/entities/chamber.entity';
+import { User } from 'src/entities/user.entity';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Doctor])],
+  imports: [TypeOrmModule.forFeature([Doctor, User, Chamber, Schedule])],
   controllers: [AgentController],
   providers: [
     AgentService,

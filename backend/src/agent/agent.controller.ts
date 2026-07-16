@@ -1,4 +1,4 @@
-import { Controller, Get } from '@nestjs/common';
+import { Body, Controller, Get, Post } from '@nestjs/common';
 import { AgentService } from './agent.service';
 
 @Controller('agent')
@@ -10,9 +10,8 @@ export class AgentController {
     return this.agentService.GetAgent();
   }
 
-  @Get('/test-agent')
-  testAgent(): Promise<object> {
-    return this.agentService.useAgent("Hi, I'm John Doe. Can I see Dr. Smith this coming Saturday at 11:00 AM? If it's free, book it.", 
-      "doctor-id")
+  @Post('/use-agent')
+  userAgent(@Body('content') content: string, @Body('doctorId') doctorId: string): Promise<object> {
+    return this.agentService.useAgent(content, doctorId);
   }
 }

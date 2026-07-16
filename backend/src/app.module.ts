@@ -3,10 +3,12 @@ import { AgentModule } from './agent/agent.module';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { RedisModule } from '@nestjs-modules/ioredis';
+import { UserModule } from './user/user.module';
 
 @Module({
   imports: [
     AgentModule,
+    UserModule,
     ConfigModule.forRoot({
       isGlobal: true,
       envFilePath: '.env',

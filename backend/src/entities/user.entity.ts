@@ -1,4 +1,5 @@
 import {
+  BeforeInsert,
   Column,
   Entity,
   JoinColumn,
@@ -7,6 +8,7 @@ import {
 } from 'typeorm';
 import { UserRole } from '../shared/customeTypes';
 import { Doctor } from './doctor.entity';
+import * as bycrypt from 'bcrypt';
 
 @Entity('users')
 export class User {
@@ -28,4 +30,10 @@ export class User {
   })
   @JoinColumn({ name: 'doctor_id' })
   doctor?: Doctor;
+
+  @BeforeInsert()
+  async hashPassword(){
+    const salt = bycrypt.genSaltSync(10)
+    this.password = bycrypt.hashSync(this.password, salt)
+  }
 }
